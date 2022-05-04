@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -87,5 +88,64 @@ def plot_metrics(history, met, save=None, size=(15, 15)):
     if save is not None:
         plt.savefig(f'{save}.png', dpi=500, transparent=True)
 
-    # Memunculkan grafik
-    plt.show()
+    # Closing the plot
+    plt.close()
+
+
+def model_tf(x_train, y_train, x_dev, y_dev, epoch=200, threshold=0.9, savefile='Classifier.h5'):
+    """
+    Fungsi ini akan melakukan pemodelan neural network menggunakan Tensorflow sesuai dengan model yang dirancang
+    untuk penelitian ini.
+    :param x_train: Data variabel independen untuk training
+    :param y_train: Data variabel dependen untuk training
+    :param x_dev: Data variabel independen untuk validation
+    :param y_dev: Data variabel dependen untuk validation
+    :param epoch: Jumlah pelatihan neural network
+    :param threshold: Batasan dari pembulatan probabilitas, digunakan saat evaluasi metrik
+    :param savefile: Nama file untuk menyimpan model
+    :return:
+    """
+
+    # Mendefinisikan metrik-metrik yang digunakan untuk evaluasi
+    metrics = [tf.keras.metrics.BinaryAccuracy(name='accuracy'),
+               tf.keras.metrics.Precision(name='precision', thresholds=threshold),
+               tf.keras.metrics.Recall(name='recall', thresholds=threshold),
+               tfa.metrics.F1Score(name='f1', num_classes=1, threshold=threshold),
+               tf.keras.metrics.AUC(name='auc')]
+
+    # Mendefinisikan model Neural Network menggunakan fungsi yang sudah ditentukan
+    nn = classifier(x_train.shape[1], )
+
+    # Meng-compile fungsi dan menentukan optimiser, metrik pengujian, dan juga loss function
+    nn.compile(optimizer=tf.keras.optimizers.Adam(),
+               loss='binary_crossentropy',
+               metrics=metrics)
+
+    # Memunculkan summary dari model
+    nn.summary()
+
+    # Membuat callback earlystopping apabila model tidak mengalami peningkatan metrik di iterasi yang tinggi
+    earlystopping = tf.keras.callbacks.EarlyStopping(monitor='val_f1',
+                                                     patience=50,
+                                                     verbose=0,
+                                                     mode='max')
+
+    # Menyimpan model beban dari model sementara dengan metrik tertinggi
+    mcp_save = tf.keras.callbacks.ModelCheckpoint('.mdl_wts.hdf5',
+                                                  save_best_only=True,
+                                                  monitor='val_f1',
+                                                  mode='max')
+
+    # Melakukan fitting model dengan data training
+    history = nn.fit(x=x_train,
+                     y=y_train,
+                     verbose=1,
+                     epochs=epoch,
+                     validation_data=(x_dev, y_dev),
+                     callbacks=[earlystopping, mcp_save])
+
+    # Menyimpan model yang sudah dilatih
+    nn.save(savefile)
+
+    # Menampilkan grafik progresi saat melatih model
+    plot_metrics(history, ['loss', 'accuracy', 'precision', 'recall', 'f1', 'auc'], save='History')
