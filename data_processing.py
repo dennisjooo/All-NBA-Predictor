@@ -60,9 +60,10 @@ def process_data(data, all_nba_dat=None, games=10, dummies=False):
     return data
 
 
-def scaler(data, exclude):
+def initial_scaler(data, exclude):
     """
     Melakukan scaling data menggunakan standard scaler
+    Hanya untuk data TRAINING
     :param data: Data yang ingin discaling
     :param exclude: Kolom yang ada di data yang tidak ingin discaling
 
@@ -73,9 +74,38 @@ def scaler(data, exclude):
     std_scaler = StandardScaler()
 
     # Mengambil kolom-kolom numerik
-    numerics = data.select_dtypes(np.number).columns.drop(exclude)
+    numerics = data.select_dtypes(np.number).columns
+
+    # Melakukan pengecekan data yang akan tidak dimasukkan
+    if exclude is not None:
+        numerics = numerics.drop(exclude)
+
+    std_scaler.fit(data[numerics])
 
     # Melakukan standard scaling ke kolom-kolom numerik yang diinginkan
-    data[numerics] = std_scaler.fit_transform(data[numerics])
+    data[numerics] = std_scaler.transform(data[numerics])
+
+    return data, std_scaler
+
+
+def scaler(scale, data, exclude):
+    """
+    Melakukan scaling data menggunakan standard scaler
+    :param scale: Scaler yang digunakan untuk scaling di awal
+    :param data: Data yang ingin discaling
+    :param exclude: Kolom yang ada di data yang tidak ingin discaling
+
+    :return: Data yang sudah discaling
+    """
+
+    # Mengambil kolom-kolom numerik
+    numerics = data.select_dtypes(np.number).columns
+
+    # Melakukan pengecekan data yang akan tidak dimasukkan
+    if exclude is not None:
+        numerics = numerics.drop(exclude)
+
+    # Melakukan standard scaling ke kolom-kolom numerik yang diinginkan
+    data[numerics] = scale.transform(data[numerics])
 
     return data
