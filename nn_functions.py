@@ -32,19 +32,19 @@ def classifier(input_shape):
     z2 = tf.keras.layers.Dense(units=256)(dropout_1)
     bn_2 = tf.keras.layers.BatchNormalization()(z2)
     a2 = tf.keras.layers.Activation('relu')(bn_2)
-    dropout_2 = tf.keras.layers.Dropout(.6, seed=0)(a2)
+    dropout_2 = tf.keras.layers.Dropout(.3, seed=0)(a2)
 
     # Membuat "block" ketiga
     z3 = tf.keras.layers.Dense(units=256)(dropout_2)
     bn_3 = tf.keras.layers.BatchNormalization()(z3)
     a3 = tf.keras.layers.Activation('relu')(bn_3)
-    dropout_3 = tf.keras.layers.Dropout(.6, seed=0)(a3)
+    dropout_3 = tf.keras.layers.Dropout(.3, seed=0)(a3)
 
     # Membuat "block" keempat
     z4 = tf.keras.layers.Dense(units=256)(dropout_3)
     bn_4 = tf.keras.layers.BatchNormalization()(z4)
     a4 = tf.keras.layers.Activation('relu')(bn_4)
-    dropout_4 = tf.keras.layers.Dropout(.6, seed=0)(a4)
+    dropout_4 = tf.keras.layers.Dropout(.3, seed=0)(a4)
 
     # Mengumpulkan hasil dari "block" keempat ke dalam sebuah lapisan "Dense" dengan aktivasi sigmoid
     outputs = tf.keras.layers.Dense(units=1, activation='sigmoid')(dropout_4)
@@ -131,7 +131,7 @@ def model_tf(x_train, y_train, x_dev, y_dev, epoch=200, threshold=0.9, savefile=
                                                      mode='max')
 
     # Menyimpan model beban dari model sementara dengan metrik tertinggi
-    mcp_save = tf.keras.callbacks.ModelCheckpoint('.mdl_wts.hdf5',
+    mcp_save = tf.keras.callbacks.ModelCheckpoint('Classifier.hdf5',
                                                   save_best_only=True,
                                                   monitor='val_f1',
                                                   mode='max')
