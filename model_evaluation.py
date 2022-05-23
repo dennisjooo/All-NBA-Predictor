@@ -77,6 +77,10 @@ def cm_heatmap(actual, predicted, size=(8, 8)):
     # Membuat heatmap dari confusion matrix
     sns.heatmap(cm, annot=True, fmt='g')
 
+    # Plot settings
+    plt.xlabel('Prediction')
+    plt.ylabel('Actual')
+
     # Menunjukan hasil
     plt.show()
 

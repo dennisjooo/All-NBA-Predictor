@@ -1,6 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
+from keras.regularizers import l2
 import seaborn as sns
 
 
@@ -21,33 +22,38 @@ def classifier(input_shape):
     # Membuat lapisan input data dengan dimensi yang ditentukan di input_shape
     input_data = tf.keras.Input(shape=input_shape)
 
+    # Mengatur probabilitas dropout dan hyperparameter lambda untuk regularization
+    do_prob = 0.65
+    lambda_l2 = 0.001
+
     # Membuat "block" pertama
     z1 = tf.keras.layers.Dense(units=256,
-                               kernel_initializer=tf.keras.initializers.HeNormal(seed=0))(input_data)
+                               kernel_initializer=tf.keras.initializers.HeNormal(seed=0),
+                               kernel_regularizer=l2(lambda_l2))(input_data)
     bn_1 = tf.keras.layers.BatchNormalization()(z1)
     a1 = tf.keras.layers.Activation('relu')(bn_1)
-    dropout_1 = tf.keras.layers.Dropout(.6, seed=0)(a1)
+    dropout_1 = tf.keras.layers.Dropout(do_prob, seed=0)(a1)
 
     # Membuat "block" kedua
-    z2 = tf.keras.layers.Dense(units=256)(dropout_1)
+    z2 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_1)
     bn_2 = tf.keras.layers.BatchNormalization()(z2)
     a2 = tf.keras.layers.Activation('relu')(bn_2)
-    dropout_2 = tf.keras.layers.Dropout(.3, seed=0)(a2)
+    dropout_2 = tf.keras.layers.Dropout(do_prob, seed=0)(a2)
 
     # Membuat "block" ketiga
-    z3 = tf.keras.layers.Dense(units=256)(dropout_2)
+    z3 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_2)
     bn_3 = tf.keras.layers.BatchNormalization()(z3)
     a3 = tf.keras.layers.Activation('relu')(bn_3)
-    dropout_3 = tf.keras.layers.Dropout(.3, seed=0)(a3)
+    dropout_3 = tf.keras.layers.Dropout(do_prob, seed=0)(a3)
 
     # Membuat "block" keempat
-    z4 = tf.keras.layers.Dense(units=256)(dropout_3)
+    z4 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_3)
     bn_4 = tf.keras.layers.BatchNormalization()(z4)
     a4 = tf.keras.layers.Activation('relu')(bn_4)
-    dropout_4 = tf.keras.layers.Dropout(.3, seed=0)(a4)
+    dropout_4 = tf.keras.layers.Dropout(do_prob, seed=0)(a4)
 
     # Mengumpulkan hasil dari "block" keempat ke dalam sebuah lapisan "Dense" dengan aktivasi sigmoid
-    outputs = tf.keras.layers.Dense(units=1, activation='sigmoid')(dropout_4)
+    outputs = tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=l2(0.01))(dropout_4)
 
     # Menginisasikan model dengan arsitektur yang tertera
     clf = tf.keras.Model(inputs=input_data, outputs=outputs)
@@ -116,8 +122,13 @@ def model_tf(x_train, y_train, x_dev, y_dev, epoch=200, threshold=0.9, savefile=
     # Mendefinisikan model Neural Network menggunakan fungsi yang sudah ditentukan
     nn = classifier(x_train.shape[1], )
 
+    # Membuat learning rate decay sesuai dengan n iterasi
+    learning_rate_decay = tf.keras.optimizers.schedules.InverseTimeDecay(initial_learning_rate=0.1,
+                                                                         decay_steps=1,
+                                                                         decay_rate=0.3)
+
     # Meng-compile fungsi dan menentukan optimiser, metrik pengujian, dan juga loss function
-    nn.compile(optimizer=tf.keras.optimizers.Adam(),
+    nn.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate_decay),
                loss='binary_crossentropy',
                metrics=metrics)
 
@@ -128,13 +139,14 @@ def model_tf(x_train, y_train, x_dev, y_dev, epoch=200, threshold=0.9, savefile=
     earlystopping = tf.keras.callbacks.EarlyStopping(monitor='val_f1',
                                                      patience=50,
                                                      verbose=0,
-                                                     mode='max')
+                                                     mode='max',
+                                                     restore_best_weights=True)
 
     # Menyimpan model beban dari model sementara dengan metrik tertinggi
-    mcp_save = tf.keras.callbacks.ModelCheckpoint('Classifier.hdf5',
-                                                  save_best_only=True,
-                                                  monitor='val_f1',
-                                                  mode='max')
+    # mcp_save = tf.keras.callbacks.ModelCheckpoint('Classifier.hdf5',
+    #                                               save_best_only=True,
+    #                                               monitor='val_f1',
+    #                                               mode='max')
 
     # Melakukan fitting model dengan data training
     history = nn.fit(x=x_train,
@@ -142,7 +154,7 @@ def model_tf(x_train, y_train, x_dev, y_dev, epoch=200, threshold=0.9, savefile=
                      verbose=1,
                      epochs=epoch,
                      validation_data=(x_dev, y_dev),
-                     callbacks=[earlystopping, mcp_save])
+                     callbacks=[earlystopping,])
 
     # Menyimpan model yang sudah dilatih
     nn.save(savefile)
