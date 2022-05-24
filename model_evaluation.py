@@ -5,7 +5,7 @@ import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 
-def prob_threshold_plot(data, hue_tar, threshold=0.5, size=(10, 10)):
+def prob_threshold_plot(data, hue_tar, threshold=0.5, size=(10, 10), save_name='something'):
     """
     Fungsi ini akan membuat scatter plot dari hasil probabilitas prediksi relatif terhadap yang hasil asli.
 
@@ -13,6 +13,7 @@ def prob_threshold_plot(data, hue_tar, threshold=0.5, size=(10, 10)):
     :param hue_tar: Kategori dari hasil asli
     :param threshold: Threshold dari probabilitas yang diinginkan
     :param size: Besar dari grafik yang diinginkan
+    :param save_name: Menentukan nama dari gambar yang akan disimpan
     """
 
     # Menyiapkan figur grafik
@@ -23,13 +24,16 @@ def prob_threshold_plot(data, hue_tar, threshold=0.5, size=(10, 10)):
                     y=data,
                     hue=hue_tar, alpha=0.5)
 
+    # Membuat garis threshold
+    plt.axhline(y=threshold, color='green', alpha=0.5, linewidth=3)
+
     # Pengaturan grafik
-    plt.axhline(y=threshold, color='green', alpha=0.5)
     plt.title('Probability and Threshold', fontsize=10, y=1.02)
     plt.ylabel('Probability')
     sns.despine()
 
     # Menunjukan hasil grafik
+    plt.savefig(f'Graph\\{save_name}.png', transparent=True)
     plt.show()
 
 
@@ -59,13 +63,14 @@ def eval_metrics(actual, predicted):
     return temp
 
 
-def cm_heatmap(actual, predicted, size=(8, 8)):
+def cm_heatmap(actual, predicted, size=(8, 8),save_name='Something'):
     """
     Fungsi ini akna membuat heatmap confusion matrix dari nilai asli dan prediksi variabel dependen
 
     :param actual: Nilai asli variabel dependen
     :param predicted: Nilai prediksi variabel dependen
     :param size: Besar dari grafik yang diinginkan
+    :param save_name: Menentukan nama dari gambar yang akan disimpan
     """
 
     # Mencari confusion matrix dari nilai asli dan prediksi
@@ -82,6 +87,7 @@ def cm_heatmap(actual, predicted, size=(8, 8)):
     plt.ylabel('Actual')
 
     # Menunjukan hasil
+    plt.savefig(f'Graph\\{save_name}.png',transparent=True)
     plt.show()
 
 
