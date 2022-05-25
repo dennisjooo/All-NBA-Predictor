@@ -23,7 +23,7 @@ def classifier(input_shape):
     input_data = tf.keras.Input(shape=input_shape)
 
     # Mengatur probabilitas dropout dan hyperparameter lambda untuk regularization
-    do_prob = 0.612  # Candidates 0.6 above
+    do_prob = 0.6125  # Candidates 0.6 above
     lambda_l2 = 0.001  # Best 0.001
 
     # Membuat "block" pertama
@@ -47,13 +47,32 @@ def classifier(input_shape):
     dropout_3 = tf.keras.layers.Dropout(do_prob, seed=0)(a3)
 
     # Membuat "block" keempat
-    z4 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_3)
+    z4 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_3 + a1)
     bn_4 = tf.keras.layers.BatchNormalization()(z4)
     a4 = tf.keras.layers.Activation('relu')(bn_4)
     dropout_4 = tf.keras.layers.Dropout(do_prob, seed=0)(a4)
 
-    # Mengumpulkan hasil dari "block" keempat ke dalam sebuah lapisan "Dense" dengan aktivasi sigmoid
-    outputs = tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=l2(lambda_l2))(dropout_4)
+    # Membuat "block" kelima
+    z5 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_4)
+    bn_5 = tf.keras.layers.BatchNormalization()(z5)
+    a5 = tf.keras.layers.Activation('relu')(bn_5)
+    dropout_5 = tf.keras.layers.Dropout(do_prob, seed=0)(a5)
+
+    # Membuat "block" keenam
+    z6 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_5 + a3)
+    bn_6 = tf.keras.layers.BatchNormalization()(z6)
+    a6 = tf.keras.layers.Activation('relu')(bn_6)
+    dropout_6 = tf.keras.layers.Dropout(do_prob, seed=0)(a6)
+
+    # Membuat "block" ketujuh
+    z7 = tf.keras.layers.Dense(units=256, kernel_regularizer=l2(lambda_l2))(dropout_6)
+    bn_7 = tf.keras.layers.BatchNormalization()(z7)
+    a7 = tf.keras.layers.Activation('relu')(bn_7)
+    dropout_7 = tf.keras.layers.Dropout(do_prob, seed=0)(a7)
+
+    # Mengumpulkan hasil dari "block" ketujuh ke dalam sebuah lapisan "Dense" dengan aktivasi sigmoid
+    outputs = tf.keras.layers.Dense(units=1, activation='sigmoid',
+                                    kernel_regularizer=l2(lambda_l2))(dropout_7 + a5)
 
     # Menginisasikan model dengan arsitektur yang tertera
     clf = tf.keras.Model(inputs=input_data, outputs=outputs)
