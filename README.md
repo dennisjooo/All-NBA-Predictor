@@ -1,6 +1,7 @@
 # All-NBA-Predictor
 This project attempted to predict the All-NBA selections using Logistic Regression, Random Forests, and a Multi-Layer Perceptron.
 The aim for the project was to predict the probability for each player in a given season to be selected in either one of the All-NBA teams.
+The project was done for my sixth semester's Research and Methodology course final project.
 
 The data for the project was taken from [Basketball-reference.com](basketball-reference.com). 
 The inputs for the models were Advanced Statistics for each players from the 1988-1989 season up to and including the 2020-2021 season.
